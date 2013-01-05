@@ -16,6 +16,12 @@
 		0D1F8698169842F500AFDE25 /* Default.png in Resources */ = {isa = PBXBuildFile; fileRef = 0D1F8697169842F500AFDE25 /* Default.png */; };
 		0D1F869A169842F500AFDE25 /* Default@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 0D1F8699169842F500AFDE25 /* Default@2x.png */; };
 		0D1F869C169842F500AFDE25 /* Default-568h@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 0D1F869B169842F500AFDE25 /* Default-568h@2x.png */; };
+		0D1F86A41698430A00AFDE25 /* RGMNodeView.m in Sources */ = {isa = PBXBuildFile; fileRef = 0D1F86A31698430A00AFDE25 /* RGMNodeView.m */; };
+		0D1F86A61698434300AFDE25 /* MainStoryboard~ipad.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 0D1F86A51698434300AFDE25 /* MainStoryboard~ipad.storyboard */; };
+		0D1F86A9169847E600AFDE25 /* RGMGraphView.m in Sources */ = {isa = PBXBuildFile; fileRef = 0D1F86A8169847E600AFDE25 /* RGMGraphView.m */; };
+		0D1F86AC1698699300AFDE25 /* RGMConnectionView.m in Sources */ = {isa = PBXBuildFile; fileRef = 0D1F86AB1698699300AFDE25 /* RGMConnectionView.m */; };
+		0D1F86B216987BF700AFDE25 /* RGMNodeViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 0D1F86B116987BF700AFDE25 /* RGMNodeViewController.m */; };
+		0D1F86B516988FCD00AFDE25 /* NSIndexPath+RGMNodeSource.m in Sources */ = {isa = PBXBuildFile; fileRef = 0D1F86B416988FCC00AFDE25 /* NSIndexPath+RGMNodeSource.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -32,6 +38,19 @@
 		0D1F8697169842F500AFDE25 /* Default.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Default.png; sourceTree = "<group>"; };
 		0D1F8699169842F500AFDE25 /* Default@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default@2x.png"; sourceTree = "<group>"; };
 		0D1F869B169842F500AFDE25 /* Default-568h@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default-568h@2x.png"; sourceTree = "<group>"; };
+		0D1F86A21698430A00AFDE25 /* RGMNodeView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RGMNodeView.h; sourceTree = "<group>"; };
+		0D1F86A31698430A00AFDE25 /* RGMNodeView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RGMNodeView.m; sourceTree = "<group>"; };
+		0D1F86A51698434300AFDE25 /* MainStoryboard~ipad.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; path = "MainStoryboard~ipad.storyboard"; sourceTree = "<group>"; };
+		0D1F86A7169847E600AFDE25 /* RGMGraphView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RGMGraphView.h; sourceTree = "<group>"; };
+		0D1F86A8169847E600AFDE25 /* RGMGraphView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RGMGraphView.m; sourceTree = "<group>"; };
+		0D1F86AA1698699300AFDE25 /* RGMConnectionView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RGMConnectionView.h; sourceTree = "<group>"; };
+		0D1F86AB1698699300AFDE25 /* RGMConnectionView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RGMConnectionView.m; sourceTree = "<group>"; };
+		0D1F86AD16987B1600AFDE25 /* RGMNodeDefines.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RGMNodeDefines.h; sourceTree = "<group>"; };
+		0D1F86AF16987B4600AFDE25 /* RGMGeometry.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RGMGeometry.h; sourceTree = "<group>"; };
+		0D1F86B016987BF600AFDE25 /* RGMNodeViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RGMNodeViewController.h; sourceTree = "<group>"; };
+		0D1F86B116987BF700AFDE25 /* RGMNodeViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RGMNodeViewController.m; sourceTree = "<group>"; };
+		0D1F86B316988FCC00AFDE25 /* NSIndexPath+RGMNodeSource.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSIndexPath+RGMNodeSource.h"; sourceTree = "<group>"; };
+		0D1F86B416988FCC00AFDE25 /* NSIndexPath+RGMNodeSource.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSIndexPath+RGMNodeSource.m"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -80,6 +99,10 @@
 			children = (
 				0D1F8694169842F500AFDE25 /* RGMAppDelegate.h */,
 				0D1F8695169842F500AFDE25 /* RGMAppDelegate.m */,
+				0D1F86B016987BF600AFDE25 /* RGMNodeViewController.h */,
+				0D1F86B116987BF700AFDE25 /* RGMNodeViewController.m */,
+				0D1F86AE16987B1D00AFDE25 /* RGMNode */,
+				0D1F86A51698434300AFDE25 /* MainStoryboard~ipad.storyboard */,
 				0D1F868C169842F500AFDE25 /* Supporting Files */,
 			);
 			path = Node;
@@ -88,6 +111,7 @@
 		0D1F868C169842F500AFDE25 /* Supporting Files */ = {
 			isa = PBXGroup;
 			children = (
+				0D1F86AF16987B4600AFDE25 /* RGMGeometry.h */,
 				0D1F868D169842F500AFDE25 /* Node-Info.plist */,
 				0D1F868E169842F500AFDE25 /* InfoPlist.strings */,
 				0D1F8691169842F500AFDE25 /* main.m */,
@@ -97,6 +121,22 @@
 				0D1F869B169842F500AFDE25 /* Default-568h@2x.png */,
 			);
 			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		0D1F86AE16987B1D00AFDE25 /* RGMNode */ = {
+			isa = PBXGroup;
+			children = (
+				0D1F86AD16987B1600AFDE25 /* RGMNodeDefines.h */,
+				0D1F86A21698430A00AFDE25 /* RGMNodeView.h */,
+				0D1F86A31698430A00AFDE25 /* RGMNodeView.m */,
+				0D1F86A7169847E600AFDE25 /* RGMGraphView.h */,
+				0D1F86A8169847E600AFDE25 /* RGMGraphView.m */,
+				0D1F86AA1698699300AFDE25 /* RGMConnectionView.h */,
+				0D1F86AB1698699300AFDE25 /* RGMConnectionView.m */,
+				0D1F86B316988FCC00AFDE25 /* NSIndexPath+RGMNodeSource.h */,
+				0D1F86B416988FCC00AFDE25 /* NSIndexPath+RGMNodeSource.m */,
+			);
+			name = RGMNode;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -155,6 +195,7 @@
 				0D1F8698169842F500AFDE25 /* Default.png in Resources */,
 				0D1F869A169842F500AFDE25 /* Default@2x.png in Resources */,
 				0D1F869C169842F500AFDE25 /* Default-568h@2x.png in Resources */,
+				0D1F86A61698434300AFDE25 /* MainStoryboard~ipad.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -167,6 +208,11 @@
 			files = (
 				0D1F8692169842F500AFDE25 /* main.m in Sources */,
 				0D1F8696169842F500AFDE25 /* RGMAppDelegate.m in Sources */,
+				0D1F86A41698430A00AFDE25 /* RGMNodeView.m in Sources */,
+				0D1F86A9169847E600AFDE25 /* RGMGraphView.m in Sources */,
+				0D1F86AC1698699300AFDE25 /* RGMConnectionView.m in Sources */,
+				0D1F86B216987BF700AFDE25 /* RGMNodeViewController.m in Sources */,
+				0D1F86B516988FCD00AFDE25 /* NSIndexPath+RGMNodeSource.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
