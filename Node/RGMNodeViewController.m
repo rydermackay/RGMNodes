@@ -18,13 +18,22 @@
 @end
 
 @implementation RGMNodeViewController {
-    NSUInteger _nodeCount;
+    NSMutableArray *_nodes;
 }
 
 - (id)initWithCoder:(NSCoder *)aDecoder
 {
     if (self = [super initWithCoder:aDecoder]) {
-        _nodeCount = 2;
+        _nodes = [NSMutableArray new];
+        [_nodes addObject:@{
+             @"title" : @"Sine Generator",
+             @"outputs" : @[@"Output 0"],
+         }];
+        [_nodes addObject:@{
+             @"title" : @"Remote IO Unit",
+             @"inputs" : @[@"Input 0", @"Input 1"],
+             @"outputs" : @[@"Output 0", @"Output 1"],
+         }];
     }
     
     return self;
@@ -38,7 +47,7 @@
     self.graphView = (RGMGraphView *)self.view;
     
     [self.graphView addConnectionFromNodeOutput:[NSIndexPath indexPathForSource:0 inNode:0]
-                                    toNodeInput:[NSIndexPath indexPathForSource:1 inNode:1]];
+                                    toNodeInput:[NSIndexPath indexPathForSource:0 inNode:1]];
 }
 
 - (void)didReceiveMemoryWarning
@@ -51,7 +60,7 @@
 
 - (NSUInteger)graphViewNumberOfNodes:(RGMGraphView *)graphView
 {
-    return _nodeCount;
+    return _nodes.count;
 }
 
 - (RGMNodeView *)graphView:(RGMGraphView *)graphView nodeForIndex:(NSUInteger)idx
@@ -64,30 +73,19 @@
 
 - (void)configureNode:(RGMNodeView *)node forIndex:(NSUInteger)idx
 {
-    switch (idx) {
-        case 0:
-            node.title = @"Sine Generator";
-            node.outputs = @[@"Output 0"];
-            node.center = CGPointMake(100, 100);
-            node.frame = CGRectIntegral(node.frame);
-            [node sizeToFit];
-            break;
-        default:
-            node.title = @"Remote IO Unit";
-            node.inputs = @[@"Input 0", @"Input 1"];
-            node.outputs = @[@"Output 0", @"Output 1"];
-            node.center = CGPointMake(600, 300);
-            node.frame = CGRectIntegral(node.frame);
-            [node sizeToFit];
-            break;
-    }
+    [node setValuesForKeysWithDictionary:[_nodes objectAtIndex:idx]];
 }
 
 #pragma mark - IBActions
 
 - (IBAction)add:(id)sender
 {
-    _nodeCount++;
+    [_nodes insertObject:@{
+         @"title" : @"Generic IO",
+         @"inputs" : @[@"Input 0"],
+         @"outputs" : @[@"Output 0"],
+     }
+                 atIndex:0];
     [self.graphView insertNodeAtIndex:0 animated:YES];
 }
 

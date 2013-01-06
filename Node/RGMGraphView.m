@@ -11,7 +11,7 @@
 #import "RGMConnectionView.h"
 #import "NSIndexPath+RGMNodeSource.h"
 
-@interface RGMGraphView () <RGMNodeViewDelegate>
+@interface RGMGraphView () <RGMNodeViewDelegate, UIActionSheetDelegate>
 
 @end
 
@@ -20,6 +20,11 @@
     CGPoint _offset;
     NSMutableArray *_nodes;
     NSMutableArray *_connections;
+    
+    UIActionSheet *_connectionActionSheet;
+    NSArray *_proposedConnections;
+    RGMNodeSource _proposedConnectionSource;
+    NSIndexPath *_proposedConnectionPort;
 }
 
 - (void)awakeFromNib
@@ -102,10 +107,7 @@
     NSUInteger nodeNumber = [self.datasource graphViewNumberOfNodes:self];
 
     for (int i = 0; i < nodeNumber; i++) {
-        RGMNodeView *node = [self.datasource graphView:self nodeForIndex:i];
-        node.delegate = self;
-        [self addSubview:node];
-        [_nodes addObject:node];
+        [self requestNodeFromDatasourceAtIndex:i];
     }
 }
 
@@ -181,15 +183,23 @@
     return [_nodes objectAtIndex:idx];
 }
 
+- (RGMNodeView *)requestNodeFromDatasourceAtIndex:(NSUInteger)idx
+{
+    RGMNodeView *node = [self.datasource graphView:self nodeForIndex:idx];
+    node.delegate = self;
+    [node sizeToFit];
+    [_nodes addObject:node];
+    [self addSubview:node];
+    
+    return node;
+}
+
 #pragma mark - Public methods
 
 - (void)insertNodeAtIndex:(NSUInteger)idx animated:(BOOL)animated
 {
-    RGMNodeView *node = [self.datasource graphView:self nodeForIndex:idx];
-    node.delegate = self;
+    RGMNodeView *node = [self requestNodeFromDatasourceAtIndex:idx];
     node.center = self.center;
-    [self addSubview:node];
-    [_nodes addObject:node];
     
     NSParameterAssert([self.datasource graphViewNumberOfNodes:self] == _nodes.count);
     
@@ -234,11 +244,6 @@
 {
     RGMConnectionView *connectionView = [[RGMConnectionView alloc] initWithFromNodeInputIndexPath:fromNodeOutputIndexPath
                                                                              toNodeInputIndexPath:toNodeInputIndexPath];
-    RGMNodeView *fromNode = [self nodeForIndex:fromNodeOutputIndexPath.node];
-    RGMNodeView *toNode = [self nodeForIndex:toNodeInputIndexPath.node];
-    
-    fromNode.outputConnection = connectionView;
-    toNode.inputConnection = connectionView;
     
     [self insertSubview:connectionView atIndex:0];
     [_connections addObject:connectionView];
@@ -246,18 +251,171 @@
     [self layoutIfNeeded];
 }
 
+- (NSArray *)availableNodeSourcesForSource:(RGMNodeSource)source nodeSourceIndexPath:(NSIndexPath *)nodeSourceIndexPath
+{
+    // e.g. given node 1, sourcetype output, index 0, what are all the available inputs?
+    
+    // step 1. gather all ports of opposite type
+    NSMutableArray *ports = [NSMutableArray new];
+    [_nodes enumerateObjectsUsingBlock:^(RGMNodeView *node, NSUInteger idx, BOOL *stop) {
+        NSArray *sourcePorts;
+        switch (source) {
+            case RGMNodeInput:
+                sourcePorts = node.outputs;
+                break;
+            case RGMNodeOutput:
+                sourcePorts = node.inputs;
+                break;
+            default:
+                break;
+        }
+        
+        for (int i = 0; i < sourcePorts.count; i++) {
+            NSIndexPath *indexPath = [NSIndexPath indexPathForSource:i inNode:idx];
+            [ports addObject:indexPath];
+        }
+    }];
+    
+    // step 2. prune
+    for (RGMConnectionView *connection in _connections) {
+        switch (source) {
+            case RGMNodeInput:
+                [ports removeObject:connection.fromNodeOutputIndexPath];
+                break;
+            case RGMNodeOutput:
+                [ports removeObject:connection.toNodeInputIndexPath];
+                break;
+            default:
+                break;
+        }
+    }
+    
+    return [ports copy];
+}
+
+- (BOOL)connectionExistsForNodeSourceIndexPath:(NSIndexPath *)nodeSourceIndexPath sourceType:(RGMNodeSource)sourceType
+{
+    for (RGMConnectionView *connection in _connections) {
+        switch (sourceType) {
+            case RGMNodeInput:
+                if ([connection.toNodeInputIndexPath isEqual:nodeSourceIndexPath]) {
+                    return YES;
+                }
+                break;
+            case RGMNodeOutput:
+                if ([connection.fromNodeOutputIndexPath isEqual:nodeSourceIndexPath]) {
+                    return YES;
+                }
+                break;
+            default:
+                break;
+        }
+    }
+    
+    return NO;
+}
+
+- (void)removeConnectionFromNodeOutput:(NSIndexPath *)fromNodeOutputIndexPath toNodeInput:(NSIndexPath *)toNodeInputIndexPath
+{
+    RGMConnectionView *connection;
+    for (RGMConnectionView *cnx in _connections) {
+        if ([cnx.fromNodeOutputIndexPath isEqual:fromNodeOutputIndexPath] || [cnx.toNodeInputIndexPath isEqual:toNodeInputIndexPath]) {
+            connection = cnx;
+            break;
+        }
+    }
+    
+    [connection removeFromSuperview];
+    [_connections removeObject:connection];
+}
+
+- (void)actionSheet:(UIActionSheet *)actionSheet clickedButtonAtIndex:(NSInteger)buttonIndex
+{
+    if ([_connectionActionSheet isEqual:actionSheet]) {
+        
+        if (buttonIndex == actionSheet.cancelButtonIndex) {
+            return;
+        }
+        
+        if (buttonIndex == actionSheet.destructiveButtonIndex) {
+            switch (_proposedConnectionSource) {
+                case RGMNodeInput:
+                    [self removeConnectionFromNodeOutput:nil toNodeInput:_proposedConnectionPort];
+                    break;
+                case RGMNodeOutput:
+                    [self removeConnectionFromNodeOutput:_proposedConnectionPort toNodeInput:nil];
+                    break;
+                default:
+                    break;
+            }
+        }
+        else {
+            NSIndexPath *destination = _proposedConnections[buttonIndex];
+            switch (_proposedConnectionSource) {
+                case RGMNodeInput:
+                    [self addConnectionFromNodeOutput:destination toNodeInput:_proposedConnectionPort];
+                    break;
+                case RGMNodeOutput:
+                    [self addConnectionFromNodeOutput:_proposedConnectionPort toNodeInput:destination];
+                    break;
+                default:
+                    break;
+            }
+        }
+    }
+}
+
+- (void)actionSheet:(UIActionSheet *)actionSheet didDismissWithButtonIndex:(NSInteger)buttonIndex
+{
+    _proposedConnectionPort = nil;
+    _proposedConnections = nil;
+    _proposedConnectionSource = 0;
+    _connectionActionSheet = nil;
+}
+
 #pragma mark - RGMNodeViewDelegate
 
 - (void)nodeView:(RGMNodeView *)nodeView tappedSource:(RGMNodeSource)source index:(NSUInteger)idx
 {
+    NSIndexPath *indexPath = [NSIndexPath indexPathForSource:idx inNode:[_nodes indexOfObject:nodeView]];
+    NSArray *ports = [self availableNodeSourcesForSource:source nodeSourceIndexPath:indexPath];
+    BOOL connectionExistsAtPort = [self connectionExistsForNodeSourceIndexPath:indexPath sourceType:source];
+    
+    if (ports.count == 0 && connectionExistsAtPort == NO) {
+        return;
+    }
+    
+    NSMutableArray *strings = [NSMutableArray new];
+    for (NSIndexPath *indexPath in ports) {
+        RGMNodeView *node = [_nodes objectAtIndex:indexPath.node];
+        NSString *name = (source == RGMNodeInput) ? node.outputs[indexPath.source] : node.inputs[indexPath.source];
+        [strings addObject:[NSString stringWithFormat:@"%@: %@", node.title, name]];
+    }
+    
     // create popover
     UIActionSheet *sheet = [[UIActionSheet alloc] initWithTitle:nil
-                                                       delegate:nil
-                                              cancelButtonTitle:@"Cancel"
-                                         destructiveButtonTitle:@"Remove" // detect connection
-                                              otherButtonTitles:@"input0", nil];
-
-    [sheet showFromRect:nodeView.frame inView:self animated:YES];
+                                                       delegate:self
+                                              cancelButtonTitle:nil
+                                         destructiveButtonTitle:nil
+                                              otherButtonTitles:nil];
+    
+    if (connectionExistsAtPort) {
+        [sheet addButtonWithTitle:@"Disconnect"];
+        sheet.destructiveButtonIndex = 0;
+    }
+    
+    for (NSString *string in strings) {
+        [sheet addButtonWithTitle:string];
+    }
+    
+    CGRect rect = [self convertRect:[nodeView frameForSource:source index:idx] fromView:nodeView];
+    
+    [sheet showFromRect:rect inView:self animated:YES];
+    
+    _proposedConnectionSource = source;
+    _proposedConnectionPort = indexPath;
+    _proposedConnections = ports;
+    _connectionActionSheet = sheet;
 }
 
 @end

@@ -26,8 +26,6 @@
 @property (nonatomic, copy) NSArray *outputs;
 
 @property (nonatomic, weak) id <RGMNodeViewDelegate> delegate;
-@property (nonatomic, weak) RGMConnectionView *inputConnection;
-@property (nonatomic, weak) RGMConnectionView *outputConnection;
 
 - (CGRect)frameForSource:(RGMNodeSource)source index:(NSUInteger)idx;
 
