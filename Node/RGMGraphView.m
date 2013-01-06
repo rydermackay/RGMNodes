@@ -337,7 +337,8 @@
             return;
         }
         
-        if (buttonIndex == actionSheet.destructiveButtonIndex) {
+        // remove existing connection
+        if ([self connectionExistsForNodeSourceIndexPath:_proposedConnectionPort sourceType:_proposedConnectionSource]) {
             switch (_proposedConnectionSource) {
                 case RGMNodeInput:
                     [self removeConnectionFromNodeOutput:nil toNodeInput:_proposedConnectionPort];
@@ -348,19 +349,29 @@
                 default:
                     break;
             }
-        }
-        else {
-            NSIndexPath *destination = _proposedConnections[buttonIndex];
-            switch (_proposedConnectionSource) {
-                case RGMNodeInput:
-                    [self addConnectionFromNodeOutput:destination toNodeInput:_proposedConnectionPort];
-                    break;
-                case RGMNodeOutput:
-                    [self addConnectionFromNodeOutput:_proposedConnectionPort toNodeInput:destination];
-                    break;
-                default:
-                    break;
+            
+            // if we only needed to disconnect we're done
+            if (buttonIndex == actionSheet.destructiveButtonIndex) {
+                return;
             }
+        }
+        
+        // I hate UIActionSheet
+        if (actionSheet.destructiveButtonIndex != -1) {
+            buttonIndex--;
+        }
+        
+        // create new connection
+        NSIndexPath *destination = _proposedConnections[buttonIndex];
+        switch (_proposedConnectionSource) {
+            case RGMNodeInput:
+                [self addConnectionFromNodeOutput:destination toNodeInput:_proposedConnectionPort];
+                break;
+            case RGMNodeOutput:
+                [self addConnectionFromNodeOutput:_proposedConnectionPort toNodeInput:destination];
+                break;
+            default:
+                break;
         }
     }
 }
