@@ -10,6 +10,7 @@
 #import "RGMNodeView.h"
 #import "RGMConnectionView.h"
 #import "NSIndexPath+RGMNodeSource.h"
+#import "RGMAddress.h"
 
 @interface RGMGraphView () <RGMNodeViewDelegate, UIActionSheetDelegate>
 
@@ -22,9 +23,8 @@
     NSMutableArray *_connections;
     
     UIActionSheet *_connectionActionSheet;
-    NSArray *_proposedConnections;
-    RGMNodeSource _proposedConnectionSource;
-    NSIndexPath *_proposedConnectionPort;
+    NSArray *_possibleAddresses;
+    RGMAddress *_selectedAddress;
 }
 
 - (void)awakeFromNib
@@ -46,14 +46,12 @@
     }
     
     for (RGMConnectionView *connection in _connections) {
+        RGMNodeView *fromNode = [self nodeForIndex:connection.fromAddress.node];
+        RGMNodeView *toNode = [self nodeForIndex:connection.toAddress.node];
         
-        
-        RGMNodeView *fromNode = [self nodeForIndex:connection.fromNodeOutputIndexPath.node];
-        RGMNodeView *toNode = [self nodeForIndex:connection.toNodeInputIndexPath.node];
-        
-        CGRect fromFrame = [self convertRect:[fromNode frameForSource:RGMNodeOutput index:connection.fromNodeOutputIndexPath.source]
+        CGRect fromFrame = [self convertRect:[fromNode frameForSource:RGMNodeOutput index:connection.fromAddress.port]
                                     fromView:fromNode];
-        CGRect toFrame = [self convertRect:[toNode frameForSource:RGMNodeInput index:connection.toNodeInputIndexPath.source]
+        CGRect toFrame = [self convertRect:[toNode frameForSource:RGMNodeInput index:connection.toAddress.port]
                                   fromView:toNode];
         
         CGFloat minY = MIN(CGRectGetMinY(fromFrame), CGRectGetMinY(toFrame));
@@ -240,10 +238,12 @@
                      completion:completion];
 }
 
-- (void)addConnectionFromNodeOutput:(NSIndexPath *)fromNodeOutputIndexPath toNodeInput:(NSIndexPath *)toNodeInputIndexPath
+- (void)addConnectionFromAddress:(RGMAddress *)fromAddress toAddress:(RGMAddress *)toAddress
 {
-    RGMConnectionView *connectionView = [[RGMConnectionView alloc] initWithFromNodeInputIndexPath:fromNodeOutputIndexPath
-                                                                             toNodeInputIndexPath:toNodeInputIndexPath];
+    NSParameterAssert(fromAddress.source == RGMNodeOutput);
+    NSParameterAssert(toAddress.source == RGMNodeInput);
+    
+    RGMConnectionView *connectionView = [[RGMConnectionView alloc] initWithFromAddress:fromAddress toAddress:toAddress];
     
     [self insertSubview:connectionView atIndex:0];
     [_connections addObject:connectionView];
@@ -251,39 +251,42 @@
     [self layoutIfNeeded];
 }
 
-- (NSArray *)availableNodeSourcesForSource:(RGMNodeSource)source nodeSourceIndexPath:(NSIndexPath *)nodeSourceIndexPath
+- (NSArray *)availableAddressesForAddress:(RGMAddress *)address
 {
     // e.g. given node 1, sourcetype output, index 0, what are all the available inputs?
     
     // step 1. gather all ports of opposite type
     NSMutableArray *ports = [NSMutableArray new];
+    __block RGMNodeSource destinationSource;
+    
     [_nodes enumerateObjectsUsingBlock:^(RGMNodeView *node, NSUInteger idx, BOOL *stop) {
         NSArray *sourcePorts;
-        switch (source) {
+        switch (address.source) {
             case RGMNodeInput:
                 sourcePorts = node.outputs;
+                destinationSource = RGMNodeOutput;
                 break;
             case RGMNodeOutput:
                 sourcePorts = node.inputs;
+                destinationSource = RGMNodeInput;
                 break;
             default:
                 break;
         }
         
         for (int i = 0; i < sourcePorts.count; i++) {
-            NSIndexPath *indexPath = [NSIndexPath indexPathForSource:i inNode:idx];
-            [ports addObject:indexPath];
+            [ports addObject:[RGMAddress addressWithNode:idx source:destinationSource port:i]];
         }
     }];
     
     // step 2. prune
     for (RGMConnectionView *connection in _connections) {
-        switch (source) {
+        switch (address.source) {
             case RGMNodeInput:
-                [ports removeObject:connection.fromNodeOutputIndexPath];
+                [ports removeObject:connection.fromAddress];
                 break;
             case RGMNodeOutput:
-                [ports removeObject:connection.toNodeInputIndexPath];
+                [ports removeObject:connection.toAddress];
                 break;
             default:
                 break;
@@ -293,17 +296,17 @@
     return [ports copy];
 }
 
-- (BOOL)connectionExistsForNodeSourceIndexPath:(NSIndexPath *)nodeSourceIndexPath sourceType:(RGMNodeSource)sourceType
+- (BOOL)connectionExistsForAddress:(RGMAddress *)address
 {
     for (RGMConnectionView *connection in _connections) {
-        switch (sourceType) {
+        switch (address.source) {
             case RGMNodeInput:
-                if ([connection.toNodeInputIndexPath isEqual:nodeSourceIndexPath]) {
+                if ([connection.toAddress isEqual:address]) {
                     return YES;
                 }
                 break;
             case RGMNodeOutput:
-                if ([connection.fromNodeOutputIndexPath isEqual:nodeSourceIndexPath]) {
+                if ([connection.fromAddress isEqual:address]) {
                     return YES;
                 }
                 break;
@@ -315,11 +318,22 @@
     return NO;
 }
 
-- (void)removeConnectionFromNodeOutput:(NSIndexPath *)fromNodeOutputIndexPath toNodeInput:(NSIndexPath *)toNodeInputIndexPath
+- (void)removeAllConnectionsFromNode:(NSUInteger)node
+{
+    for (RGMConnectionView *cnx in _connections.copy) {
+        if (cnx.toAddress.node == node) {
+            [self removeConnectionFromAddress:nil toAddress:cnx.toAddress];
+        } else if (cnx.fromAddress.node == node) {
+            [self removeConnectionFromAddress:cnx.fromAddress toAddress:nil];
+        }
+    }
+}
+
+- (void)removeConnectionFromAddress:(RGMAddress *)fromAddress toAddress:(RGMAddress *)toAddress
 {
     RGMConnectionView *connection;
     for (RGMConnectionView *cnx in _connections) {
-        if ([cnx.fromNodeOutputIndexPath isEqual:fromNodeOutputIndexPath] || [cnx.toNodeInputIndexPath isEqual:toNodeInputIndexPath]) {
+        if ([cnx.fromAddress isEqual:fromAddress] || [cnx.toAddress isEqual:toAddress]) {
             connection = cnx;
             break;
         }
@@ -338,13 +352,13 @@
         }
         
         // remove existing connection
-        if ([self connectionExistsForNodeSourceIndexPath:_proposedConnectionPort sourceType:_proposedConnectionSource]) {
-            switch (_proposedConnectionSource) {
+        if ([self connectionExistsForAddress:_selectedAddress]) {
+            switch (_selectedAddress.source) {
                 case RGMNodeInput:
-                    [self removeConnectionFromNodeOutput:nil toNodeInput:_proposedConnectionPort];
+                    [self removeConnectionFromAddress:nil toAddress:_selectedAddress];
                     break;
                 case RGMNodeOutput:
-                    [self removeConnectionFromNodeOutput:_proposedConnectionPort toNodeInput:nil];
+                    [self removeConnectionFromAddress:_selectedAddress toAddress:nil];
                     break;
                 default:
                     break;
@@ -362,13 +376,13 @@
         }
         
         // create new connection
-        NSIndexPath *destination = _proposedConnections[buttonIndex];
-        switch (_proposedConnectionSource) {
+        RGMAddress *address = _possibleAddresses[buttonIndex];
+        switch (_selectedAddress.source) {
             case RGMNodeInput:
-                [self addConnectionFromNodeOutput:destination toNodeInput:_proposedConnectionPort];
+                [self addConnectionFromAddress:address toAddress:_selectedAddress];
                 break;
             case RGMNodeOutput:
-                [self addConnectionFromNodeOutput:_proposedConnectionPort toNodeInput:destination];
+                [self addConnectionFromAddress:_selectedAddress toAddress:address];
                 break;
             default:
                 break;
@@ -378,9 +392,8 @@
 
 - (void)actionSheet:(UIActionSheet *)actionSheet didDismissWithButtonIndex:(NSInteger)buttonIndex
 {
-    _proposedConnectionPort = nil;
-    _proposedConnections = nil;
-    _proposedConnectionSource = 0;
+    _selectedAddress = nil;
+    _possibleAddresses = nil;
     _connectionActionSheet = nil;
 }
 
@@ -388,9 +401,9 @@
 
 - (void)nodeView:(RGMNodeView *)nodeView tappedSource:(RGMNodeSource)source index:(NSUInteger)idx
 {
-    NSIndexPath *indexPath = [NSIndexPath indexPathForSource:idx inNode:[_nodes indexOfObject:nodeView]];
-    NSArray *ports = [self availableNodeSourcesForSource:source nodeSourceIndexPath:indexPath];
-    BOOL connectionExistsAtPort = [self connectionExistsForNodeSourceIndexPath:indexPath sourceType:source];
+    RGMAddress *address = [RGMAddress addressWithNode:[_nodes indexOfObject:nodeView] source:source port:idx];
+    NSArray *ports = [self availableAddressesForAddress:address];
+    BOOL connectionExistsAtPort = [self connectionExistsForAddress:address];
     
     if (ports.count == 0 && connectionExistsAtPort == NO) {
         return;
@@ -423,9 +436,8 @@
     
     [sheet showFromRect:rect inView:self animated:YES];
     
-    _proposedConnectionSource = source;
-    _proposedConnectionPort = indexPath;
-    _proposedConnections = ports;
+    _selectedAddress = address;
+    _possibleAddresses = ports;
     _connectionActionSheet = sheet;
 }
 

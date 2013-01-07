@@ -11,6 +11,7 @@
 #import "RGMGraphView.h"
 #import "RGMNodeView.h"
 #import "NSIndexPath+RGMNodeSource.h"
+#import "RGMAddress.h"
 
 @interface RGMNodeViewController () <RGMGraphViewDatasource, RGMGraphViewDelegate>
 - (IBAction)add:(id)sender;
@@ -46,8 +47,8 @@
     NSParameterAssert([self.view isKindOfClass:[RGMGraphView class]]);
     self.graphView = (RGMGraphView *)self.view;
     
-    [self.graphView addConnectionFromNodeOutput:[NSIndexPath indexPathForSource:0 inNode:0]
-                                    toNodeInput:[NSIndexPath indexPathForSource:0 inNode:1]];
+    [self.graphView addConnectionFromAddress:[RGMAddress addressWithNode:0 source:RGMNodeOutput port:0]
+                                   toAddress:[RGMAddress addressWithNode:1 source:RGMNodeInput port:0]];
 }
 
 - (void)didReceiveMemoryWarning

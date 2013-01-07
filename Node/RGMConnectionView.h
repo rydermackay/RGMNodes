@@ -9,14 +9,15 @@
 #import <UIKit/UIKit.h>
 
 @class RGMNodeView;
+@class RGMAddress;
 
 @interface RGMConnectionView : UIView
 
-- (id)initWithFromNodeInputIndexPath:(NSIndexPath *)fromNodeOutputIndexPath
-                toNodeInputIndexPath:(NSIndexPath *)toNodeInputIndexPath;
+- (id)initWithFromAddress:(RGMAddress *)fromAddress
+                toAddress:(RGMAddress *)toAddress;
 
-@property (nonatomic, readonly) NSIndexPath *fromNodeOutputIndexPath;
-@property (nonatomic, readonly) NSIndexPath *toNodeInputIndexPath;
+@property (nonatomic, readonly) RGMAddress *fromAddress;
+@property (nonatomic, readonly) RGMAddress *toAddress;
 @property (nonatomic, assign) CGPoint startPoint;
 @property (nonatomic, assign) CGPoint endPoint;
 

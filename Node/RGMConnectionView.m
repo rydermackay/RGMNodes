@@ -12,11 +12,11 @@
 
 @implementation RGMConnectionView
 
-- (id)initWithFromNodeInputIndexPath:(NSIndexPath *)fromNodeOutputIndexPath toNodeInputIndexPath:(NSIndexPath *)toNodeInputIndexPath
+- (id)initWithFromAddress:(RGMAddress *)fromAddress toAddress:(RGMAddress *)toAddress
 {
     if (self = [super initWithFrame:CGRectZero]) {
-        _fromNodeOutputIndexPath = fromNodeOutputIndexPath;
-        _toNodeInputIndexPath = toNodeInputIndexPath;
+        _fromAddress = fromAddress;
+        _toAddress = toAddress;
         [self commonInit];
     }
     

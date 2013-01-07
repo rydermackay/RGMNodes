@@ -22,6 +22,7 @@
 		0D1F86AC1698699300AFDE25 /* RGMConnectionView.m in Sources */ = {isa = PBXBuildFile; fileRef = 0D1F86AB1698699300AFDE25 /* RGMConnectionView.m */; };
 		0D1F86B216987BF700AFDE25 /* RGMNodeViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 0D1F86B116987BF700AFDE25 /* RGMNodeViewController.m */; };
 		0D1F86B516988FCD00AFDE25 /* NSIndexPath+RGMNodeSource.m in Sources */ = {isa = PBXBuildFile; fileRef = 0D1F86B416988FCC00AFDE25 /* NSIndexPath+RGMNodeSource.m */; };
+		0DACE235169A481000AEEC44 /* RGMAddress.m in Sources */ = {isa = PBXBuildFile; fileRef = 0DACE234169A481000AEEC44 /* RGMAddress.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -51,6 +52,8 @@
 		0D1F86B116987BF700AFDE25 /* RGMNodeViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RGMNodeViewController.m; sourceTree = "<group>"; };
 		0D1F86B316988FCC00AFDE25 /* NSIndexPath+RGMNodeSource.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSIndexPath+RGMNodeSource.h"; sourceTree = "<group>"; };
 		0D1F86B416988FCC00AFDE25 /* NSIndexPath+RGMNodeSource.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSIndexPath+RGMNodeSource.m"; sourceTree = "<group>"; };
+		0DACE233169A481000AEEC44 /* RGMAddress.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RGMAddress.h; sourceTree = "<group>"; };
+		0DACE234169A481000AEEC44 /* RGMAddress.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RGMAddress.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -127,6 +130,8 @@
 			isa = PBXGroup;
 			children = (
 				0D1F86AD16987B1600AFDE25 /* RGMNodeDefines.h */,
+				0DACE233169A481000AEEC44 /* RGMAddress.h */,
+				0DACE234169A481000AEEC44 /* RGMAddress.m */,
 				0D1F86A21698430A00AFDE25 /* RGMNodeView.h */,
 				0D1F86A31698430A00AFDE25 /* RGMNodeView.m */,
 				0D1F86A7169847E600AFDE25 /* RGMGraphView.h */,
@@ -213,6 +218,7 @@
 				0D1F86AC1698699300AFDE25 /* RGMConnectionView.m in Sources */,
 				0D1F86B216987BF700AFDE25 /* RGMNodeViewController.m in Sources */,
 				0D1F86B516988FCD00AFDE25 /* NSIndexPath+RGMNodeSource.m in Sources */,
+				0DACE235169A481000AEEC44 /* RGMAddress.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -323,6 +329,7 @@
 				0D1F86A1169842F500AFDE25 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};

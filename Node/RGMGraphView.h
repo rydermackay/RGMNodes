@@ -11,10 +11,14 @@
 
 @class RGMGraphView;
 @class RGMNodeView;
+@class RGMAddress;
 
 @protocol RGMGraphViewDelegate <UIScrollViewDelegate>
 
-
+- (BOOL)graphView:(RGMGraphView *)graphView shouldConnectNode:(NSIndexPath *)fromNode toNode:(NSIndexPath *)toNode;
+- (void)graphView:(RGMGraphView *)graphView didConnectNode:(NSIndexPath *)fromNode toNode:(NSIndexPath *)toNode;
+- (BOOL)graphView:(RGMGraphView *)graphView shouldDisconnectNode:(NSIndexPath *)fromNode toNode:(NSIndexPath *)toNode;
+- (void)graphView:(RGMGraphView *)graphView didDisconnectNode:(NSIndexPath *)fromNode toNode:(NSIndexPath *)toNode;
 
 @end
 
@@ -34,11 +38,11 @@
 - (void)insertNodeAtIndex:(NSUInteger)idx animated:(BOOL)animated;
 - (void)removeNodeAtIndex:(NSUInteger)idx animated:(BOOL)animated;
 
-- (void)addConnectionFromNodeOutput:(NSIndexPath *)fromNodeOutputIndexPath
-                        toNodeInput:(NSIndexPath *)toNodeInputIndexPath;
+- (void)addConnectionFromAddress:(RGMAddress *)fromAddress
+                       toAddress:(RGMAddress *)toAddress;
 
-- (void)removeConnectionFromNodeOutput:(NSIndexPath *)fromNodeOutputIndexPath
-                           toNodeInput:(NSIndexPath *)toNodeInputIndexPath;
+- (void)removeConnectionFromAddress:(RGMAddress *)fromAddress
+                          toAddress:(RGMAddress *)toAddress;
 
 - (void)removeAllConnectionsFromNode:(NSUInteger)node;
 
