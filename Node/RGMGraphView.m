@@ -186,7 +186,7 @@
     RGMNodeView *node = [self.datasource graphView:self nodeForIndex:idx];
     node.delegate = self;
     [node sizeToFit];
-    [_nodes addObject:node];
+    [_nodes insertObject:node atIndex:idx];
     [self addSubview:node];
     
     return node;
@@ -260,6 +260,12 @@
     __block RGMNodeSource destinationSource;
     
     [_nodes enumerateObjectsUsingBlock:^(RGMNodeView *node, NSUInteger idx, BOOL *stop) {
+        
+        // disallow connections to self
+        if (address.node == idx) {
+            return;
+        }
+        
         NSArray *sourcePorts;
         switch (address.source) {
             case RGMNodeInput:
@@ -402,17 +408,17 @@
 - (void)nodeView:(RGMNodeView *)nodeView tappedSource:(RGMNodeSource)source index:(NSUInteger)idx
 {
     RGMAddress *address = [RGMAddress addressWithNode:[_nodes indexOfObject:nodeView] source:source port:idx];
-    NSArray *ports = [self availableAddressesForAddress:address];
+    NSArray *addresses = [self availableAddressesForAddress:address];
     BOOL connectionExistsAtPort = [self connectionExistsForAddress:address];
     
-    if (ports.count == 0 && connectionExistsAtPort == NO) {
+    if (addresses.count == 0 && connectionExistsAtPort == NO) {
         return;
     }
     
     NSMutableArray *strings = [NSMutableArray new];
-    for (NSIndexPath *indexPath in ports) {
-        RGMNodeView *node = [_nodes objectAtIndex:indexPath.node];
-        NSString *name = (source == RGMNodeInput) ? node.outputs[indexPath.source] : node.inputs[indexPath.source];
+    for (RGMAddress *adr in addresses) {
+        RGMNodeView *node = [_nodes objectAtIndex:adr.node];
+        NSString *name = (source == RGMNodeInput) ? node.outputs[adr.port] : node.inputs[adr.port];
         [strings addObject:[NSString stringWithFormat:@"%@: %@", node.title, name]];
     }
     
@@ -437,7 +443,7 @@
     [sheet showFromRect:rect inView:self animated:YES];
     
     _selectedAddress = address;
-    _possibleAddresses = ports;
+    _possibleAddresses = addresses;
     _connectionActionSheet = sheet;
 }
 

@@ -26,6 +26,28 @@
     return self;
 }
 
+- (NSString *)description
+{
+    return [NSString stringWithFormat:@"%@: node: %d, source: %@, port: %d", [super description], self.node, RGMStringForSource(self.source), self.port ];
+}
+
+static inline NSString * RGMStringForSource(RGMNodeSource source) {
+    switch (source) {
+        case RGMNodeInput:
+            return @"input";
+            break;
+        case RGMNodeOutput:
+            return @"output";
+            break;
+        case RGMNodeUnknown:
+            return @"unknown";
+            break;
+        default:
+            return nil;
+            break;
+    }
+}
+
 - (BOOL)isEqual:(id)object
 {
     if ([object isKindOfClass:[self class]]) {
