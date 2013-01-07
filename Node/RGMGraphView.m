@@ -186,7 +186,7 @@
     RGMNodeView *node = [self.datasource graphView:self nodeForIndex:idx];
     node.delegate = self;
     [node sizeToFit];
-    [_nodes insertObject:node atIndex:idx];
+    [_nodes addObject:node];
     [self addSubview:node];
     
     return node;
