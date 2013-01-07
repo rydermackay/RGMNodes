@@ -243,12 +243,20 @@
     NSParameterAssert(fromAddress.source == RGMNodeOutput);
     NSParameterAssert(toAddress.source == RGMNodeInput);
     
+    if ([self.delegate respondsToSelector:@selector(graphView:willConnectFromAddress:toAddress:)]) {
+        [self.delegate graphView:self willConnectFromAddress:fromAddress toAddress:toAddress];
+    }
+    
     RGMConnectionView *connectionView = [[RGMConnectionView alloc] initWithFromAddress:fromAddress toAddress:toAddress];
     
     [self insertSubview:connectionView atIndex:0];
     [_connections addObject:connectionView];
 
     [self layoutIfNeeded];
+    
+    if ([self.delegate respondsToSelector:@selector(graphView:didConnectFromAddress:toAddress:)]) {
+        [self.delegate graphView:self didConnectFromAddress:fromAddress toAddress:toAddress];
+    }
 }
 
 - (NSArray *)availableAddressesForAddress:(RGMAddress *)address
@@ -281,7 +289,15 @@
         }
         
         for (int i = 0; i < sourcePorts.count; i++) {
-            [ports addObject:[RGMAddress addressWithNode:idx source:destinationSource port:i]];
+            RGMAddress *destination = [RGMAddress addressWithNode:idx source:destinationSource port:i];
+            
+            if ([self.delegate respondsToSelector:@selector(graphView:canConnectFromAddress:toAddress:)]) {
+                if ([self.delegate graphView:self canConnectFromAddress:address toAddress:destination] == NO) {
+                    continue;
+                }
+            }
+
+            [ports addObject:destination];
         }
     }];
     
@@ -337,6 +353,10 @@
 
 - (void)removeConnectionFromAddress:(RGMAddress *)fromAddress toAddress:(RGMAddress *)toAddress
 {
+    if ([self.delegate respondsToSelector:@selector(graphView:willDisconnectFromAddress:toAddress:)]) {
+        [self.delegate graphView:self willDisconnectFromAddress:fromAddress toAddress:toAddress];
+    }
+    
     RGMConnectionView *connection;
     for (RGMConnectionView *cnx in _connections) {
         if ([cnx.fromAddress isEqual:fromAddress] || [cnx.toAddress isEqual:toAddress]) {
@@ -347,6 +367,10 @@
     
     [connection removeFromSuperview];
     [_connections removeObject:connection];
+    
+    if ([self.delegate respondsToSelector:@selector(graphView:didDisconnectFromAddress:toAddress:)]) {
+        [self.delegate graphView:self didDisconnectFromAddress:fromAddress toAddress:toAddress];
+    }
 }
 
 - (void)actionSheet:(UIActionSheet *)actionSheet clickedButtonAtIndex:(NSInteger)buttonIndex
@@ -409,11 +433,23 @@
 {
     RGMAddress *address = [RGMAddress addressWithNode:[_nodes indexOfObject:nodeView] source:source port:idx];
     NSArray *addresses = [self availableAddressesForAddress:address];
-    BOOL connectionExistsAtPort = [self connectionExistsForAddress:address];
+    BOOL canDisconnect = [self connectionExistsForAddress:address];
     
-    if (addresses.count == 0 && connectionExistsAtPort == NO) {
+    if (canDisconnect && [self.delegate respondsToSelector:@selector(graphView:canDisconnectFromAddress:toAddress:)]) {
+        canDisconnect = [self.delegate graphView:self
+                        canDisconnectFromAddress:address.source == RGMNodeOutput ? address : nil
+                                       toAddress:address.source == RGMNodeInput ? address : nil];
+    }
+    
+    if (addresses.count == 0 && canDisconnect == NO) {
         return;
     }
+    
+    UIActionSheet *sheet = [[UIActionSheet alloc] initWithTitle:nil
+                                                       delegate:self
+                                              cancelButtonTitle:nil
+                                         destructiveButtonTitle:nil
+                                              otherButtonTitles:nil];
     
     NSMutableArray *strings = [NSMutableArray new];
     for (RGMAddress *adr in addresses) {
@@ -422,14 +458,7 @@
         [strings addObject:[NSString stringWithFormat:@"%@: %@", node.title, name]];
     }
     
-    // create popover
-    UIActionSheet *sheet = [[UIActionSheet alloc] initWithTitle:nil
-                                                       delegate:self
-                                              cancelButtonTitle:nil
-                                         destructiveButtonTitle:nil
-                                              otherButtonTitles:nil];
-    
-    if (connectionExistsAtPort) {
+    if (canDisconnect) {
         [sheet addButtonWithTitle:@"Disconnect"];
         sheet.destructiveButtonIndex = 0;
     }

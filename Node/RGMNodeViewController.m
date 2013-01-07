@@ -57,7 +57,39 @@
     // Dispose of any resources that can be recreated.
 }
 
-#pragma mark - RGMGraphiViewDatasource
+#pragma mark - RGMGraphViewDelegate
+
+- (BOOL)graphView:(RGMGraphView *)graphView canConnectFromAddress:(RGMAddress *)fromAddress toAddress:(RGMAddress *)toAddress
+{
+    return YES;
+}
+
+- (void)graphView:(RGMGraphView *)graphView willConnectFromAddress:(RGMAddress *)fromAddress toAddress:(RGMAddress *)toAddress
+{
+    
+}
+
+- (void)graphView:(RGMGraphView *)graphView didConnectFromAddress:(RGMAddress *)fromAddress toAddress:(RGMAddress *)toAddress
+{
+    
+}
+
+- (BOOL)graphView:(RGMGraphView *)graphView canDisconnectFromAddress:(RGMAddress *)fromAddress toAddress:(RGMAddress *)toAddress
+{
+    return YES;
+}
+
+- (void)graphView:(RGMGraphView *)graphView willDisconnectFromAddress:(RGMAddress *)fromAddress toAddress:(RGMAddress *)toAddress
+{
+    
+}
+
+- (void)graphView:(RGMGraphView *)graphView didDisconnectFromAddress:(RGMAddress *)fromAddress toAddress:(RGMAddress *)toAddress
+{
+    
+}
+
+#pragma mark - RGMGraphViewDatasource
 
 - (NSUInteger)graphViewNumberOfNodes:(RGMGraphView *)graphView
 {

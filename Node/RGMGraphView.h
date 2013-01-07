@@ -15,10 +15,14 @@
 
 @protocol RGMGraphViewDelegate <UIScrollViewDelegate>
 
-- (BOOL)graphView:(RGMGraphView *)graphView shouldConnectNode:(NSIndexPath *)fromNode toNode:(NSIndexPath *)toNode;
-- (void)graphView:(RGMGraphView *)graphView didConnectNode:(NSIndexPath *)fromNode toNode:(NSIndexPath *)toNode;
-- (BOOL)graphView:(RGMGraphView *)graphView shouldDisconnectNode:(NSIndexPath *)fromNode toNode:(NSIndexPath *)toNode;
-- (void)graphView:(RGMGraphView *)graphView didDisconnectNode:(NSIndexPath *)fromNode toNode:(NSIndexPath *)toNode;
+@optional
+- (BOOL)graphView:(RGMGraphView *)graphView canConnectFromAddress:(RGMAddress *)fromAddress toAddress:(RGMAddress *)toAddress;
+- (void)graphView:(RGMGraphView *)graphView willConnectFromAddress:(RGMAddress *)fromAddress toAddress:(RGMAddress *)toAddress;
+- (void)graphView:(RGMGraphView *)graphView didConnectFromAddress:(RGMAddress *)fromAddress toAddress:(RGMAddress *)toAddress;
+
+- (BOOL)graphView:(RGMGraphView *)graphView canDisconnectFromAddress:(RGMAddress *)fromAddress toAddress:(RGMAddress *)toAddress;
+- (void)graphView:(RGMGraphView *)graphView willDisconnectFromAddress:(RGMAddress *)fromAddress toAddress:(RGMAddress *)toAddress;
+- (void)graphView:(RGMGraphView *)graphView didDisconnectFromAddress:(RGMAddress *)fromAddress toAddress:(RGMAddress *)toAddress;
 
 @end
 
