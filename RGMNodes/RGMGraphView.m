@@ -31,8 +31,6 @@
 {
     [super awakeFromNib];
     
-    self.backgroundColor = [UIColor lightGrayColor];
-    
     UILongPressGestureRecognizer *longPress = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(didLongPress:)];
     [self addGestureRecognizer:longPress];
 }
