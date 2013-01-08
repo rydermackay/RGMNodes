@@ -9,8 +9,8 @@
 #import "RGMGraphView.h"
 #import "RGMNodeView.h"
 #import "RGMConnectionView.h"
-#import "NSIndexPath+RGMNodeSource.h"
 #import "RGMAddress.h"
+#import "RGMConnection.h"
 
 @interface RGMGraphView () <RGMNodeViewDelegate, UIActionSheetDelegate>
 
@@ -45,7 +45,9 @@
         [self reloadData];
     }
     
-    for (RGMConnectionView *connection in _connections) {
+    for (RGMConnectionView *connectionView in _connections) {
+        
+        RGMConnection *connection = connectionView.connection;
         RGMNodeView *fromNode = [self nodeForIndex:connection.fromAddress.node];
         RGMNodeView *toNode = [self nodeForIndex:connection.toAddress.node];
         
@@ -56,15 +58,15 @@
         
         CGFloat minY = MIN(CGRectGetMinY(fromFrame), CGRectGetMinY(toFrame));
         CGFloat maxY = MAX(CGRectGetMaxY(fromFrame), CGRectGetMaxY(toFrame));
-        connection.frame = CGRectMake(CGRectGetMaxX(fromFrame),
+        connectionView.frame = CGRectMake(CGRectGetMaxX(fromFrame),
                                       minY,
                                       CGRectGetMinX(toFrame) - CGRectGetMaxX(fromFrame),
                                       maxY - minY);
         
-        connection.startPoint = [self convertPoint:CGPointMake(CGRectGetMaxX(fromFrame), CGRectGetMidY(fromFrame))
-                                            toView:connection];
-        connection.endPoint = [self convertPoint:CGPointMake(CGRectGetMinX(toFrame), CGRectGetMidY(toFrame))
-                                          toView:connection];
+        connectionView.startPoint = [self convertPoint:CGPointMake(CGRectGetMaxX(fromFrame), CGRectGetMidY(fromFrame))
+                                            toView:connectionView];
+        connectionView.endPoint = [self convertPoint:CGPointMake(CGRectGetMinX(toFrame), CGRectGetMidY(toFrame))
+                                          toView:connectionView];
     }
 }
 
@@ -238,98 +240,105 @@
                      completion:completion];
 }
 
-- (void)addConnectionFromAddress:(RGMAddress *)fromAddress toAddress:(RGMAddress *)toAddress
+- (void)addConnection:(RGMConnection *)connection
 {
-    NSParameterAssert(fromAddress.source == RGMNodeOutput);
-    NSParameterAssert(toAddress.source == RGMNodeInput);
-    
-    if ([self.delegate respondsToSelector:@selector(graphView:willConnectFromAddress:toAddress:)]) {
-        [self.delegate graphView:self willConnectFromAddress:fromAddress toAddress:toAddress];
+    if ([self.delegate respondsToSelector:@selector(graphView:willConnect:)]) {
+        [self.delegate graphView:self willConnect:connection];
     }
     
-    RGMConnectionView *connectionView = [[RGMConnectionView alloc] initWithFromAddress:fromAddress toAddress:toAddress];
+    RGMConnectionView *connectionView = [[RGMConnectionView alloc] initWithConnection:connection];
     
     [self insertSubview:connectionView atIndex:0];
     [_connections addObject:connectionView];
 
     [self layoutIfNeeded];
     
-    if ([self.delegate respondsToSelector:@selector(graphView:didConnectFromAddress:toAddress:)]) {
-        [self.delegate graphView:self didConnectFromAddress:fromAddress toAddress:toAddress];
+    if ([self.delegate respondsToSelector:@selector(graphView:didConnect:)]) {
+        [self.delegate graphView:self didConnect:connection];
     }
 }
 
 - (NSArray *)availableAddressesForAddress:(RGMAddress *)address
 {
-    // e.g. given node 1, sourcetype output, index 0, what are all the available inputs?
+    NSArray *nodePorts;
+    RGMNodeSource destinationSource;
     
-    // step 1. gather all ports of opposite type
-    NSMutableArray *ports = [NSMutableArray new];
-    __block RGMNodeSource destinationSource;
+    // TODO: find better name for "source" on node. confusing when describing connections w/ source & destination!!
     
-    [_nodes enumerateObjectsUsingBlock:^(RGMNodeView *node, NSUInteger idx, BOOL *stop) {
+    switch (address.source) {
+        case RGMNodeInput:
+            nodePorts = [_nodes valueForKey:@"outputs"];
+            destinationSource = RGMNodeOutput;
+            break;
+        case RGMNodeOutput:
+            nodePorts = [_nodes valueForKey:@"inputs"];
+            destinationSource = RGMNodeInput;
+            break;
+        default:
+            break;
+    }
+    
+    NSMutableArray *addresses = [NSMutableArray new];
+    
+    [nodePorts enumerateObjectsUsingBlock:^(NSArray *ports, NSUInteger nodeIndex, BOOL *stop) {
         
-        // disallow connections to self
-        if (address.node == idx) {
+        // some nodes have no inputs/outputs
+        if ([ports isEqual:[NSNull null]]) {
             return;
         }
         
-        NSArray *sourcePorts;
-        switch (address.source) {
-            case RGMNodeInput:
-                sourcePorts = node.outputs;
-                destinationSource = RGMNodeOutput;
-                break;
-            case RGMNodeOutput:
-                sourcePorts = node.inputs;
-                destinationSource = RGMNodeInput;
-                break;
-            default:
-                break;
+        // disallow connections to self
+        if (address.node == nodeIndex) {
+            return;
         }
         
-        for (int i = 0; i < sourcePorts.count; i++) {
-            RGMAddress *destination = [RGMAddress addressWithNode:idx source:destinationSource port:i];
-            
-            if ([self.delegate respondsToSelector:@selector(graphView:canConnectFromAddress:toAddress:)]) {
-                if ([self.delegate graphView:self canConnectFromAddress:address toAddress:destination] == NO) {
-                    continue;
-                }
+        NSArray *existingConnections = [_connections valueForKey:@"connection"];
+        
+        [ports enumerateObjectsUsingBlock:^(id obj, NSUInteger portIndex, BOOL *stop) {
+            RGMAddress *destination = [RGMAddress addressWithNode:nodeIndex source:destinationSource port:portIndex];
+            RGMConnection *connection;
+            switch (address.source) {
+                case RGMNodeInput:
+                    connection = [RGMConnection connectionFrom:destination to:address];
+                    break;
+                case RGMNodeOutput:
+                    connection = [RGMConnection connectionFrom:address to:destination];
+                    break;
+                default:
+                    break;
             }
-
-            [ports addObject:destination];
-        }
+            
+            if ([existingConnections containsObject:connection]) {
+                return;
+            }
+            
+            BOOL canConnect = YES;
+            
+            if ([self.delegate respondsToSelector:@selector(graphView:canConnect:)]) {
+                canConnect = [self.delegate graphView:self canConnect:connection];
+            }
+            
+            if (canConnect) {
+                [addresses addObject:destination];
+            }
+        }];
     }];
     
-    // step 2. prune
-    for (RGMConnectionView *connection in _connections) {
-        switch (address.source) {
-            case RGMNodeInput:
-                [ports removeObject:connection.fromAddress];
-                break;
-            case RGMNodeOutput:
-                [ports removeObject:connection.toAddress];
-                break;
-            default:
-                break;
-        }
-    }
-    
-    return [ports copy];
+    return [addresses copy];
 }
 
-- (BOOL)connectionExistsForAddress:(RGMAddress *)address
+- (RGMConnection *)connectionForAddress:(RGMAddress *)address
 {
-    for (RGMConnectionView *connection in _connections) {
+    for (RGMConnection *connection in [_connections valueForKey:@"connection"]) {
         switch (address.source) {
             case RGMNodeInput:
                 if ([connection.toAddress isEqual:address]) {
-                    return YES;
+                    return connection;
                 }
                 break;
             case RGMNodeOutput:
                 if ([connection.fromAddress isEqual:address]) {
-                    return YES;
+                    return connection;
                 }
                 break;
             default:
@@ -337,39 +346,41 @@
         }
     }
     
-    return NO;
+    return nil;
 }
 
 - (void)removeAllConnectionsFromNode:(NSUInteger)node
 {
-    for (RGMConnectionView *cnx in _connections.copy) {
-        if (cnx.toAddress.node == node) {
-            [self removeConnectionFromAddress:nil toAddress:cnx.toAddress];
-        } else if (cnx.fromAddress.node == node) {
-            [self removeConnectionFromAddress:cnx.fromAddress toAddress:nil];
+    for (RGMConnection *connection in [_connections valueForKey:@"connection"]) {
+        if (connection.fromAddress.node == node || connection.toAddress.node == node) {
+            [self removeConnection:connection];
         }
     }
 }
 
-- (void)removeConnectionFromAddress:(RGMAddress *)fromAddress toAddress:(RGMAddress *)toAddress
+- (void)removeConnection:(RGMConnection *)connection
 {
-    if ([self.delegate respondsToSelector:@selector(graphView:willDisconnectFromAddress:toAddress:)]) {
-        [self.delegate graphView:self willDisconnectFromAddress:fromAddress toAddress:toAddress];
+    if (connection == nil) {
+        return;
     }
     
-    RGMConnectionView *connection;
+    if ([self.delegate respondsToSelector:@selector(graphView:willDisconnect:)]) {
+        [self.delegate graphView:self willDisconnect:connection];
+    }
+    
+    RGMConnectionView *connectionView;
     for (RGMConnectionView *cnx in _connections) {
-        if ([cnx.fromAddress isEqual:fromAddress] || [cnx.toAddress isEqual:toAddress]) {
-            connection = cnx;
+        if ([cnx.connection isEqual:connection]) {
+            connectionView = cnx;
             break;
         }
     }
     
-    [connection removeFromSuperview];
-    [_connections removeObject:connection];
+    [connectionView removeFromSuperview];
+    [_connections removeObject:connectionView];
     
-    if ([self.delegate respondsToSelector:@selector(graphView:didDisconnectFromAddress:toAddress:)]) {
-        [self.delegate graphView:self didDisconnectFromAddress:fromAddress toAddress:toAddress];
+    if ([self.delegate respondsToSelector:@selector(graphView:didDisconnect:)]) {
+        [self.delegate graphView:self didDisconnect:connection];
     }
 }
 
@@ -381,23 +392,10 @@
             return;
         }
         
-        // remove existing connection
-        if ([self connectionExistsForAddress:_selectedAddress]) {
-            switch (_selectedAddress.source) {
-                case RGMNodeInput:
-                    [self removeConnectionFromAddress:nil toAddress:_selectedAddress];
-                    break;
-                case RGMNodeOutput:
-                    [self removeConnectionFromAddress:_selectedAddress toAddress:nil];
-                    break;
-                default:
-                    break;
-            }
-            
-            // if we only needed to disconnect we're done
-            if (buttonIndex == actionSheet.destructiveButtonIndex) {
-                return;
-            }
+        [self removeConnection:[self connectionForAddress:_selectedAddress]];
+        
+        if (buttonIndex == actionSheet.destructiveButtonIndex) {
+            return;
         }
         
         // I hate UIActionSheet
@@ -405,14 +403,16 @@
             buttonIndex--;
         }
         
-        // create new connection
         RGMAddress *address = _possibleAddresses[buttonIndex];
+        [self removeConnection:[self connectionForAddress:address]];
+        
+        // create new connection
         switch (_selectedAddress.source) {
             case RGMNodeInput:
-                [self addConnectionFromAddress:address toAddress:_selectedAddress];
+                [self addConnection:[RGMConnection connectionFrom:address to:_selectedAddress]];
                 break;
             case RGMNodeOutput:
-                [self addConnectionFromAddress:_selectedAddress toAddress:address];
+                [self addConnection:[RGMConnection connectionFrom:_selectedAddress to:address]];
                 break;
             default:
                 break;
@@ -433,12 +433,11 @@
 {
     RGMAddress *address = [RGMAddress addressWithNode:[_nodes indexOfObject:nodeView] source:source port:idx];
     NSArray *addresses = [self availableAddressesForAddress:address];
-    BOOL canDisconnect = [self connectionExistsForAddress:address];
+    RGMConnection *existingConnection = [self connectionForAddress:address];
+    BOOL canDisconnect = existingConnection != nil;
     
-    if (canDisconnect && [self.delegate respondsToSelector:@selector(graphView:canDisconnectFromAddress:toAddress:)]) {
-        canDisconnect = [self.delegate graphView:self
-                        canDisconnectFromAddress:address.source == RGMNodeOutput ? address : nil
-                                       toAddress:address.source == RGMNodeInput ? address : nil];
+    if (canDisconnect && [self.delegate respondsToSelector:@selector(graphView:canDisconnect:)]) {
+        canDisconnect = [self.delegate graphView:self canDisconnect:existingConnection];
     }
     
     if (addresses.count == 0 && canDisconnect == NO) {

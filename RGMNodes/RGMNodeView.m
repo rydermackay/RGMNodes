@@ -100,6 +100,9 @@ static CGFloat kRowHeight = 44.0f;
         [button setTitle:string forState:UIControlStateNormal];
         [button setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
         [button addTarget:self action:@selector(sourceButtonTapped:) forControlEvents:UIControlEventTouchUpInside];
+        button.titleLabel.font = [UIFont systemFontOfSize:13];
+        button.titleLabel.minimumScaleFactor = 0.5;
+        button.titleLabel.adjustsFontSizeToFitWidth = YES;
         [self addSubview:button];
         [storage addObject:button];
     }
@@ -196,7 +199,11 @@ static CGFloat kRowHeight = 44.0f;
         maxHeight += kRowHeight;
     }
     
-    return CGSizeMake(200, maxHeight);
+    const CGFloat minWidth = 200;
+    CGFloat width = floorf([self.title sizeWithFont:_titleLabel.font].width) + 20;
+    width = MAX(width, minWidth);
+    
+    return CGSizeMake(width, maxHeight);
 }
 
 @end

@@ -12,17 +12,18 @@
 @class RGMGraphView;
 @class RGMNodeView;
 @class RGMAddress;
+@class RGMConnection;
 
 @protocol RGMGraphViewDelegate <UIScrollViewDelegate>
 
 @optional
-- (BOOL)graphView:(RGMGraphView *)graphView canConnectFromAddress:(RGMAddress *)fromAddress toAddress:(RGMAddress *)toAddress;
-- (void)graphView:(RGMGraphView *)graphView willConnectFromAddress:(RGMAddress *)fromAddress toAddress:(RGMAddress *)toAddress;
-- (void)graphView:(RGMGraphView *)graphView didConnectFromAddress:(RGMAddress *)fromAddress toAddress:(RGMAddress *)toAddress;
+- (BOOL)graphView:(RGMGraphView *)graphView canConnect:(RGMConnection *)connection;
+- (void)graphView:(RGMGraphView *)graphView willConnect:(RGMConnection *)connection;
+- (void)graphView:(RGMGraphView *)graphView didConnect:(RGMConnection *)connection;
 
-- (BOOL)graphView:(RGMGraphView *)graphView canDisconnectFromAddress:(RGMAddress *)fromAddress toAddress:(RGMAddress *)toAddress;
-- (void)graphView:(RGMGraphView *)graphView willDisconnectFromAddress:(RGMAddress *)fromAddress toAddress:(RGMAddress *)toAddress;
-- (void)graphView:(RGMGraphView *)graphView didDisconnectFromAddress:(RGMAddress *)fromAddress toAddress:(RGMAddress *)toAddress;
+- (BOOL)graphView:(RGMGraphView *)graphView canDisconnect:(RGMConnection *)connection;
+- (void)graphView:(RGMGraphView *)graphView willDisconnect:(RGMConnection *)connection;
+- (void)graphView:(RGMGraphView *)graphView didDisconnect:(RGMConnection *)connection;
 
 @end
 
@@ -42,11 +43,9 @@
 - (void)insertNodeAtIndex:(NSUInteger)idx animated:(BOOL)animated;
 - (void)removeNodeAtIndex:(NSUInteger)idx animated:(BOOL)animated;
 
-- (void)addConnectionFromAddress:(RGMAddress *)fromAddress
-                       toAddress:(RGMAddress *)toAddress;
+- (void)addConnection:(RGMConnection *)connection;
 
-- (void)removeConnectionFromAddress:(RGMAddress *)fromAddress
-                          toAddress:(RGMAddress *)toAddress;
+- (void)removeConnection:(RGMConnection *)connection;
 
 - (void)removeAllConnectionsFromNode:(NSUInteger)node;
 

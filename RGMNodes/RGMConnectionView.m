@@ -9,14 +9,14 @@
 #import "RGMConnectionView.h"
 #import <QuartzCore/QuartzCore.h>
 #import "RGMGeometry.h"
+#import "RGMConnection.h"
 
 @implementation RGMConnectionView
 
-- (id)initWithFromAddress:(RGMAddress *)fromAddress toAddress:(RGMAddress *)toAddress
+- (id)initWithConnection:(RGMConnection *)connection
 {
     if (self = [super initWithFrame:CGRectZero]) {
-        _fromAddress = fromAddress;
-        _toAddress = toAddress;
+        _connection = connection;
         [self commonInit];
     }
     

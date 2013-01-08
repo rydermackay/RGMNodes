@@ -8,16 +8,13 @@
 
 #import <UIKit/UIKit.h>
 
-@class RGMNodeView;
-@class RGMAddress;
+@class RGMConnection;
 
 @interface RGMConnectionView : UIView
 
-- (id)initWithFromAddress:(RGMAddress *)fromAddress
-                toAddress:(RGMAddress *)toAddress;
+- (id)initWithConnection:(RGMConnection *)connection;
 
-@property (nonatomic, readonly) RGMAddress *fromAddress;
-@property (nonatomic, readonly) RGMAddress *toAddress;
+@property (nonatomic, readonly) RGMConnection *connection;
 @property (nonatomic, assign) CGPoint startPoint;
 @property (nonatomic, assign) CGPoint endPoint;
 
